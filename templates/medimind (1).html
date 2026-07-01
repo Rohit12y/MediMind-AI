@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>MediMind AI</title>
+<link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@300;400;500;600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
+<link rel="stylesheet" href="{{url_for('static', filename='style.css')}}" />
+</head>
+<body>
+
+<!-- Ambient orbs -->
+<div class="bg-orb bg-orb-1"></div>
+<div class="bg-orb bg-orb-2"></div>
+<div class="bg-orb bg-orb-3"></div>
+
+<!-- Logo -->
+<div class="logo">
+  <div class="logo-icon">🩺</div>
+  <div class="logo-text">Medi<span>Mind</span></div>
+</div>
+
+<!-- Nav right -->
+<div class="nav-right">
+  <div class="nav-badge">AI Health Assistant</div>
+</div>
+
+<!-- App -->
+<div class="app">
+
+  <!-- Landing -->
+  <div id="landing">
+    <div class="hero-icon">🩺</div>
+    <div class="hero-heading">
+      <h1>Hello, I'm <span class="gradient-text">MediMind</span></h1>
+      <p>Your intelligent health companion — ask me anything about symptoms, wellness, or care.</p>
+    </div>
+    <div class="chips">
+      <button class="chip" onclick="prefill('What causes a fever to last more than 3 days?')">Persistent fever</button>
+      <button class="chip" onclick="prefill('What are early signs of diabetes?')">Signs of diabetes</button>
+      <button class="chip" onclick="prefill('How can I improve my sleep quality?')">Better sleep</button>
+      <button class="chip" onclick="prefill('What should I do for a mild headache?')">Headache relief</button>
+      <button class="chip" onclick="prefill('Is my blood pressure of 130/85 concerning?')">Blood pressure</button>
+      <button class="chip" onclick="prefill('What vitamins help boost immunity?')">Immunity boosters</button>
+    </div>
+  </div>
+
+  <!-- Chat screen -->
+  <div id="chat-screen">
+    <div class="messages" id="messages"></div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <div class="input-wrap">
+      <div class="input-box">
+        <textarea id="user-input" rows="1" placeholder="Ask me about symptoms, treatments, wellness…" oninput="onInput()" onkeydown="onKey(event)"></textarea>
+        <button class="send-btn" id="send-btn" onclick="sendMessage()" title="Send">
+          <svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          </svg>
+        </button>
+      </div>
+      <div class="input-hint">MediMind may be wrong. Always consult a qualified doctor for medical advice.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+const landingEl   = document.getElementById('landing');
+const chatEl      = document.getElementById('chat-screen');
+const messagesEl  = document.getElementById('messages');
+const inputEl     = document.getElementById('user-input');
+const sendBtn     = document.getElementById('send-btn');
+let chatStarted   = false;
+let isThinking    = false;
+
+
+
+function prefill(text) {
+  inputEl.value = text;
+  onInput();
+  inputEl.focus();
+}
+
+function onInput() {
+  inputEl.style.height = 'auto';
+  inputEl.style.height = Math.min(inputEl.scrollHeight, 160) + 'px';
+  sendBtn.classList.toggle('active', inputEl.value.trim().length > 0);
+}
+
+function onKey(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    if (inputEl.value.trim()) sendMessage();
+  }
+}
+
+async function sendMessage() {
+  if (isThinking) return;
+  const text = inputEl.value.trim();
+  if (!text) return;
+
+  if (!chatStarted) {
+    chatStarted = true;
+    landingEl.classList.add('hidden');
+    chatEl.classList.add('visible');
+  }
+
+  inputEl.value = '';
+  inputEl.style.height = 'auto';
+  sendBtn.classList.remove('active');
+  isThinking = true;
+
+  appendUserMsg(text);
+  const typingRow = appendTyping();
+
+  try {
+    const formData = new FormData();
+    formData.append('msg', text);
+
+    const res = await fetch('/get', {
+      method: 'POST',
+      body: formData
+    });
+
+    const rawText = await res.text();
+
+    if (!res.ok) {
+      console.error('Server error:', res.status, rawText);
+      typingRow.remove();
+      appendBotMsg(`⚠️ Server error ${res.status}: ${rawText.slice(0, 200)}`);
+    } else {
+      typingRow.remove();
+      appendBotMsg(rawText || 'Sorry, I couldn\'t process that. Please try again.');
+    }
+  } catch (err) {
+    typingRow.remove();
+    appendBotMsg(`⚠️ Connection failed: ${err.message}. Is your Flask server running on port 8080?`);
+    console.error('Chat error:', err);
+  } finally {
+    isThinking = false;
+    inputEl.focus();
+  }
+}
+
+function appendUserMsg(text) {
+  const row = document.createElement('div');
+  row.className = 'msg-row user';
+  row.innerHTML = `
+    <div class="avatar user">You</div>
+    <div class="bubble user">${escHtml(text)}</div>
+  `;
+  messagesEl.appendChild(row);
+  scrollDown();
+}
+
+function appendTyping() {
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  row.innerHTML = `
+    <div class="avatar bot">🩺</div>
+    <div class="bubble bot">
+      <div class="typing-dots"><span></span><span></span><span></span></div>
+    </div>
+  `;
+  messagesEl.appendChild(row);
+  scrollDown();
+  return row;
+}
+
+function appendBotMsg(text) {
+  const row = document.createElement('div');
+  row.className = 'msg-row';
+  const bubble = document.createElement('div');
+  bubble.className = 'bubble bot bot-text';
+  row.innerHTML = `<div class="avatar bot">🩺</div>`;
+  row.appendChild(bubble);
+  messagesEl.appendChild(row);
+  scrollDown();
+  typeWriter(bubble, text);
+}
+
+function typeWriter(el, text) {
+  let i = 0;
+  const speed = 12;
+  function tick() {
+    if (i < text.length) {
+      el.textContent += text[i++];
+      scrollDown();
+      setTimeout(tick, speed);
+    }
+  }
+  tick();
+}
+
+function scrollDown() {
+  messagesEl.scrollTop = messagesEl.scrollHeight;
+}
+
+function escHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+}
+</script>
+</body>
+</html>

@@ -1,4 +1,4 @@
-# MediMind-AI# 🩺 MediMind-AI
+🩺 MediMind-AI
 
 An AI-powered medical chatbot that answers healthcare-related questions using Large Language Models (LLMs) and Retrieval-Augmented Generation (RAG). The application provides intelligent responses based on medical documents through a simple and interactive web interface.
 

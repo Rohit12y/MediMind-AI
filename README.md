@@ -159,6 +159,7 @@ This project is licensed under the MIT License.
 **Rohit Yadav**
 
 GitHub: https://github.com/Rohit12y
+Email: yadavrohit7212@gmail.com
 
 ---
 

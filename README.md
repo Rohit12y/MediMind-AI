@@ -1,4 +1,4 @@
-# MediMind-AI# 🩺 MediMind-AI
+# 🩺 MediMind-AI
 
 An AI-powered medical chatbot that answers healthcare-related questions using Large Language Models (LLMs) and Retrieval-Augmented Generation (RAG). The application provides intelligent responses based on medical documents through a simple and interactive web interface.
 
@@ -159,6 +159,7 @@ This project is licensed under the MIT License.
 **Rohit Yadav**
 
 GitHub: https://github.com/Rohit12y
+Email: yadavrohit7212@gmail.com
 
 ---
 
